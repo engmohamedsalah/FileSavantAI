@@ -19,7 +19,7 @@ FileSavantAI is a project that demonstrates how to integrate a C program with a 
 
 1.  **Clone the repository:**
     ```sh
-    git clone <your-repo-url>
+    git clone <repo-url>
     cd FileSavantAI
     ```
 
