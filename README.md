@@ -117,7 +117,7 @@ You can also build and run this project inside a Docker container.
     -   Run the container using the `--env-file` flag to securely pass your API key.
     -   Pass the filename and any search flags as a command at the end of the `docker run` line.
     ```sh
-    docker run --env-file .env filesavantai info --match-type contains
+    docker run --env-file .env filesavantai hello_world.txt
     ```
 
 ## C Program Output Format
