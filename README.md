@@ -372,24 +372,22 @@ graph TD
     D --> C
     C --> B
     
-    B --> E["🤖 AI Analysis"]
+    B --> E{"🔑 Check OpenAI API Key"}
     
-    E --> F{"🔑 OpenAI API?"}
+    E -->|"✅ Key Available"| F["🤖 AI Analysis"]
+    E -->|"❌ No Key/Empty"| G["📝 Basic Fallback Analysis"]
     
-    F -->|"✅ Yes"| G["🧠 Smart Answer"]
-    F -->|"❌ No"| H["🔄 Basic Answer"]
-    
-    G --> I["📋 Result"]
-    H --> I
+    F --> H["📋 Result"]
+    G --> H
     
     style A fill:#e1f5fe
     style B fill:#e8f5e8
     style C fill:#f3e5f5
     style D fill:#fff3e0
-    style E fill:#e8f5e8
-    style G fill:#e8f5e8
-    style H fill:#ffebee
-    style I fill:#e1f5fe
+    style E fill:#e1f5fe
+    style F fill:#e8f5e8
+    style G fill:#fff3e0
+    style H fill:#e1f5fe
 ```
 
 ### Core Features
@@ -522,16 +520,16 @@ graph TD
     G --> D
     D --> H["🐍 Python Client<br/>Receives file data"]
     
-    H --> I["🧠 AI Query Parser<br/>Extract match specifications"]
+    H --> I{"🔑 Check OpenAI API Key"}
     
-    I --> J["🎯 File Filtering<br/>Apply parsed parameters"]
+    I -->|"✅ Key Available"| J["🧠 AI Query Parser<br/>Extract match specifications"]
+    I -->|"❌ No Key/Empty"| K["📝 Basic File Filtering<br/>Default parameters"]
     
-    J --> K["🤖 OpenAI Analysis<br/>Natural language processing"]
+    J --> L["🎯 File Filtering<br/>Apply parsed parameters"]
     
-    K --> L{"🔑 API Available?"}
+    L --> M["🤖 OpenAI Analysis<br/>Natural language processing"]
     
-    L -->|"✅ Yes"| M["🧠 AI Response<br/>Intelligent analysis"]
-    L -->|"❌ No"| N["🔄 Fallback Analysis<br/>Keyword matching"]
+    K --> N["🔄 Fallback Analysis<br/>Keyword matching"]
     
     M --> O["✅ Output<br/>Natural language answer"]
     N --> O
@@ -544,9 +542,10 @@ graph TD
     style F fill:#fff3e0
     style G fill:#fff9c4
     style H fill:#e8f5e8
-    style I fill:#fff9c4
+    style I fill:#e1f5fe
     style J fill:#fff9c4
-    style K fill:#e8f5e8
+    style K fill:#fff3e0
+    style L fill:#fff9c4
     style M fill:#e8f5e8
     style N fill:#ffebee
     style O fill:#e1f5fe
@@ -560,8 +559,10 @@ graph TD
 4. **⚙️ C Server Processing**: Executes file system operations
 5. **📋 Response Formation**: Packages file metadata in JSON-RPC response
 6. **🔗 MCP Transport**: Returns response via pipes
-7. **🧠 AI Processing**: Analyzes query and filters files
-8. **🤖 Intelligent Output**: Generates natural language response
+7. **🔑 API Key Check**: Determines if OpenAI API is available
+8. **🧠 AI Processing**: If API available, analyzes query and filters files intelligently
+9. **📝 Fallback Processing**: If no API, uses basic keyword matching
+10. **🤖 Output Generation**: Creates natural language response based on available mode
 
 **MCP Communication Example:**
 

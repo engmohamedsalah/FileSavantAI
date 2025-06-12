@@ -179,11 +179,6 @@ def answer_file_question_with_ai(files, query, filename=None, suppress_warnings=
             return f"❌ File '{filename}' not found."
         files = target_files
     
-    # Set up OpenAI API key
-    openai.api_key = os.getenv('OPENAI_API_KEY')
-    if not openai.api_key:
-        return "❌ OpenAI API key not found. Please set OPENAI_API_KEY in .env file"
-    
     # Prepare file data for AI analysis
     file_data_summary = []
     for file_info in files:
@@ -267,13 +262,25 @@ def main():
         
     print(f"✅ Found {len(files)} files")
     
-    # Answer the query using AI
-    if args.filename:
-        print(f"\n🤖 AI Analysis for '{args.filename}':")
-    else:
-        print(f"\n🤖 AI Analysis for all files:")
+    # Check OpenAI API availability first
+    api_key = os.getenv('OPENAI_API_KEY')
+    has_openai = api_key is not None and api_key.strip() != ""
     
-    answer = answer_file_question_with_ai(files, args.query, args.filename)
+    if has_openai:
+        print(f"\n🤖 AI Analysis for '{args.filename if args.filename else 'all files'}':")
+        openai.api_key = api_key
+        answer = answer_file_question_with_ai(files, args.query, args.filename)
+    else:
+        print(f"\n📝 Basic Analysis for '{args.filename if args.filename else 'all files'}' (No OpenAI API key):")
+        # Filter files if filename specified
+        if args.filename:
+            target_files = find_file(files, args.filename, "contains", False)
+            if not target_files:
+                print(f"❌ File '{args.filename}' not found.")
+                return
+            files = target_files
+        answer = fallback_file_analysis(files, args.query)
+    
     print(answer)
 
 if __name__ == "__main__":
