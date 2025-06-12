@@ -359,124 +359,46 @@ Important Notes:
 
 ### System Pipeline Overview
 
-The FileSavantAI system follows a sophisticated pipeline that integrates C-level file operations with AI-powered analysis:
+FileSavantAI combines C-level system operations with AI-powered analysis to answer questions about file ownership and attributes:
 
 ```mermaid
 graph TD
-    A["User Command<br/>python3 ai_integration.py"] --> B["Parse Arguments<br/>argparse"]
+    A["👤 User Question<br/>about file ownership"] --> B["🔍 FileSavantAI System"]
     
-    B --> C{"Mutual Exclusivity Check"}
-    C -->|"--list-all AND --filename"| D["Error: Mutually Exclusive<br/>Exit with Error Message"]
-    C -->|"Valid Arguments"| E["Print: Analyzing files in directory"]
+    B --> C["⚙️ C Program<br/>Extracts file metadata"]
+    C --> D["📊 JSON Data<br/>owner, permissions, timestamps"]
     
-    E --> F["Run C Program<br/>subprocess.run file_info"]
+    D --> E["🤖 AI Analysis<br/>GPT models understand questions"]
+    E --> F{"🔑 API Available?"}
     
-    F --> G{"C Program Success?"}
-    G -->|"Success"| H["Raw JSON Output<br/>from stdout"]
-    G -->|"Failure"| I["Print Error Message<br/>Return None"]
+    F -->|"✅ Yes"| G["🧠 OpenAI Response<br/>Natural language answer"]
+    F -->|"❌ No"| H["🔄 Fallback Analysis<br/>Keyword matching"]
     
-    H --> J["Parse JSON<br/>json.loads"]
-    J --> K{"JSON Valid?"}
-    K -->|"Valid"| L["Files List Created"]
-    K -->|"Invalid"| M["Print JSON Error<br/>Return Empty List"]
+    G --> I["✅ Validation<br/>Cross-check with ls -l"]
+    H --> I
     
-    L --> N{"Any Files Found?"}
-    N -->|"No Files"| O["Print: No files found<br/>Exit"]
-    N -->|"Files Found"| P["Print: Found X files"]
-    
-    P --> Q{"Command Mode?"}
-    Q -->|"--list-all"| R["Display All Files<br/>analyze_file_ownership"]
-    Q -->|"Question Mode"| S["Prepare for AI Analysis"]
-    
-    S --> T["Call answer_file_question_with_ai"]
-    T --> U{"Filename Specified?"}
-    U -->|"Yes"| V["Filter Files<br/>find_file with match_type"]
-    U -->|"No"| W["Use All Files"]
-    
-    V --> X{"Files Found After Filter?"}
-    X -->|"No"| Y["Return: File not found"]
-    X -->|"Yes"| Z["Filtered Files List"]
-    
-    W --> Z
-    Z --> AA{"Check OpenAI API Key"}
-    AA -->|"No API Key"| BB["Return: API key not found"]
-    AA -->|"API Key Present"| CC["Format File Data<br/>Create file_data_summary"]
-    
-    CC --> DD["Create AI Prompts<br/>system_prompt + user_prompt"]
-    DD --> EE["Get Model from ENV<br/>OPENAI_MODEL or default"]
-    EE --> FF["OpenAI API Call<br/>ChatCompletion.create"]
-    
-    FF --> GG{"API Call Success?"}
-    GG -->|"Success"| HH["Format AI Response<br/>Return with emoji prefix"]
-    GG -->|"Failure/Exception"| II["Print Warning<br/>Call fallback_file_analysis"]
-    
-    II --> JJ["Keyword Analysis<br/>Check for own, permission, size"]
-    JJ --> KK["Return Fallback Response"]
-    
-    HH --> LL["Print AI Analysis Result"]
-    KK --> LL
-    Y --> LL
-    BB --> LL
-    
-    LL --> MM{"--validate Flag?"}
-    MM -->|"Yes"| NN["Determine Target Files<br/>filename or first 3 files"]
-    MM -->|"No"| OO["End Program"]
-    
-    NN --> PP["For Each Target File<br/>Run ls -l command"]
-    PP --> QQ["Print Validation Results"]
-    QQ --> OO
-    
-    R --> MM
+    I --> J["📋 Final Answer<br/>Who owns the file?"]
     
     style A fill:#e1f5fe
-    style F fill:#f3e5f5
-    style H fill:#e8f5e8
-    style CC fill:#fff3e0
-    style FF fill:#fff3e0
-    style II fill:#ffebee
-    style JJ fill:#ffebee
-    style OO fill:#e8f5e8
+    style B fill:#f3e5f5
+    style C fill:#fff3e0
+    style E fill:#e8f5e8
+    style G fill:#e8f5e8
+    style H fill:#ffebee
+    style J fill:#e1f5fe
 ```
 
-### Pipeline Stages Explained
+### Core Features
 
-1. **🔤 Input Processing**: 
-   - Parse command-line arguments with `argparse`
-   - Validate mutual exclusivity (--list-all vs --filename)
-   
-2. **⚙️ C Program Execution**: 
-   - Execute `./file_info [directory]` via `subprocess.run()`
-   - Capture JSON output from stdout or handle errors
-   
-3. **📊 JSON Processing**: 
-   - Parse JSON with `json.loads()`
-   - Convert to Python file objects list
-   - Handle parsing errors gracefully
-   
-4. **🎯 File Filtering** (if filename specified):
-   - Apply search strategy: exact, contains, or similar
-   - Use case-sensitive or case-insensitive matching
-   - Return filtered file list or "not found" error
-   
-5. **🤖 AI Analysis**:
-   - Check for OpenAI API key availability
-   - Format file data for AI consumption
-   - Create system and user prompts
-   - Call OpenAI API with configurable model
-   - Handle API failures with automatic fallback
-   
-6. **🔄 Fallback Analysis** (when AI unavailable):
-   - Keyword-based pattern matching
-   - Check for "own", "permission", "size" in questions
-   - Generate structured responses
-   
-7. **✅ Validation** (optional with --validate):
-   - Run `ls -l` on target files
-   - Cross-validate AI results with system output
-   
-8. **📋 Output Formatting**:
-   - Display results with emoji formatting
-   - Show validation comparisons if requested
+**🎯 The system has 4 main components:**
+
+1. **⚙️ System-Level Data Collection**: C program extracts complete file metadata (owner, permissions, timestamps)
+
+2. **🤖 AI-Powered Understanding**: OpenAI models interpret natural language questions about files
+
+3. **🔄 Reliable Fallback**: Automatic keyword-based analysis when AI is unavailable  
+
+4. **✅ Validation**: Cross-check results with system commands for accuracy
 
 ### Two-Part Design (Task 2 Compliance)
 
