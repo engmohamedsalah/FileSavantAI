@@ -357,64 +357,71 @@ Important Notes:
 
 ### System Pipeline Overview
 
-FileSavantAI combines C-level system operations with AI-powered analysis to answer questions about file ownership and attributes:
+FileSavantAI combines C-level system operations with AI-powered analysis using Model Context Protocol (MCP) for efficient communication:
 
 ```mermaid
 graph TD
-    A["👤 User Natural Language Query<br/>with optional file targeting"] --> B["🔍 FileSavantAI Hybrid System"]
+    A["👤 User Natural Language Query<br/>with optional file targeting"] --> B["🔍 FileSavantAI MCP System"]
     
-    B --> C["⚙️ C Program<br/>Extracts file metadata"]
-    C --> D["📊 JSON Data<br/>owner, permissions, timestamps"]
+    B --> C["🔌 MCP Client (Python)<br/>Sends structured requests"]
+    C --> D["⚙️ MCP Server (C)<br/>File system operations"]
+    D --> E["📊 Structured Response<br/>File metadata via MCP protocol"]
     
-    D --> E["🧠 AI Query Parser<br/>Extracts match type & case sensitivity"]
-    E --> F["🎯 File Filtering<br/>Apply parsed parameters"]
+    E --> F["🧠 AI Query Parser<br/>Extracts match type & case sensitivity"]
+    F --> G["🎯 File Filtering<br/>Apply parsed parameters"]
     
-    F --> G["🤖 AI Analysis<br/>GPT models understand natural queries"]
-    G --> H{"🔑 API Available?"}
+    G --> H["🤖 AI Analysis<br/>GPT models understand natural queries"]
+    H --> I{"🔑 API Available?"}
     
-    H -->|"✅ Yes"| I["🧠 OpenAI Response<br/>Natural language answer"]
-    H -->|"❌ No"| J["🔄 Fallback Analysis<br/>Keyword matching"]
+    I -->|"✅ Yes"| J["🧠 OpenAI Response<br/>Natural language answer"]
+    I -->|"❌ No"| K["🔄 Fallback Analysis<br/>Keyword matching"]
     
-    I --> K["✅ Validation<br/>Cross-check with ls -l"]
-    J --> K
+    J --> L["✅ Validation<br/>Cross-check with ls -l"]
+    K --> L
     
-    K --> L["📋 Final Answer<br/>Intelligent file analysis"]
+    L --> M["📋 Final Answer<br/>Intelligent file analysis"]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
-    style C fill:#fff3e0
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
     style E fill:#fff9c4
     style F fill:#fff9c4
-    style G fill:#e8f5e8
-    style I fill:#e8f5e8
-    style J fill:#ffebee
-    style L fill:#e1f5fe
+    style H fill:#e8f5e8
+    style J fill:#e8f5e8
+    style K fill:#ffebee
+    style M fill:#e1f5fe
 ```
 
 ### Core Features
 
-**🎯 The hybrid system has 5 main components:**
+**🎯 The MCP-based system has 6 main components:**
 
-1. **⚙️ System-Level Data Collection**: C program extracts complete file metadata (owner, permissions, timestamps)
+1. **🔌 MCP Communication Layer**: Efficient structured communication between Python client and C server
 
-2. **🧠 Natural Language Parsing**: AI extracts match specifications (exact, contains, similar, case-sensitive) from user queries
+2. **⚙️ System-Level Data Collection**: C MCP server extracts complete file metadata (owner, permissions, timestamps)
 
-3. **🎯 Smart File Filtering**: Apply parsed parameters to target the right files
+3. **🧠 Natural Language Parsing**: AI extracts match specifications (exact, contains, similar, case-sensitive) from user queries
 
-4. **🤖 AI-Powered Understanding**: OpenAI models interpret natural language queries about files
+4. **🎯 Smart File Filtering**: Apply parsed parameters to target the right files
 
-5. **🔄 Reliable Fallback**: Automatic keyword-based analysis when AI is unavailable with validation
+5. **🤖 AI-Powered Understanding**: OpenAI models interpret natural language queries about files
+
+6. **🔄 Reliable Fallback**: Automatic keyword-based analysis when AI is unavailable with validation
 
 ### Two-Part Design (Task 2 Compliance)
 
-1. **C Program (`file_info.c`)**:
+1. **C MCP Server (`file_info_mcp_server.c`)**:
+   - Implements Model Context Protocol server for file operations
    - Performs low-level file system operations using `stat()`, `readdir()`, etc.
-   - Outputs comprehensive JSON with owner, group, permissions, timestamps
+   - Provides structured JSON responses via MCP protocol
    - Efficient system-level file analysis with error handling
    - Supports all major file types (files, directories, symlinks, devices, etc.)
+   - Exposes tools: `list_files`, `get_file_info`, `search_files`
 
-2. **AI-Powered Python Integration (`ai_integration.py`)**:
+2. **AI-Powered Python MCP Client (`ai_integration.py`)**:
    - Uses OpenAI GPT-3.5-turbo for intelligent query answering
+   - Communicates with C server via fast MCP protocol
    - Parses natural language for match specifications (exact, contains, similar, case-sensitive)
    - Converts file metadata into natural language responses
    - Handles complex queries beyond simple keyword matching
@@ -422,40 +429,69 @@ graph TD
    - Validates results using `ls -l` for accuracy
    - Hybrid approach: explicit arguments for core functionality, natural language for specifications
 
+### 📊 Technical Implementation Details
 
+#### C MCP Server Implementation
+- **MCP Protocol**: Implements JSON-RPC 2.0 over stdin/stdout for structured communication
+- **File system operations**: Uses `stat()`, `readdir()`, `lstat()` for complete metadata
+- **Tool exposure**: `list_files`, `get_file_info`, `search_files` via MCP interface
+- **Error handling**: Robust error checking for file access, permissions, and invalid paths
+- **Memory management**: Proper cleanup of allocated memory and directory handles
+- **Performance**: Efficient single-pass directory traversal with minimal protocol overhead
 
-### How the C Program Works
+#### Python MCP Client Integration
+- **MCP Communication**: Fast JSON-RPC communication with C server via pipes
+- **AI query processing**: OpenAI API integration with structured prompt engineering
+- **Hybrid parameter parsing**: Combines explicit CLI arguments with AI-extracted specifications
+- **File filtering**: Multiple match types (exact, contains, similar) with case sensitivity options
+- **Fallback system**: Graceful degradation when AI is unavailable, maintaining core functionality
+- **Data validation**: Cross-reference with system tools (`ls -l`) for accuracy verification
+- **Protocol efficiency**: Simplified MCP implementation for optimal speed
 
-The core logic of `file_info.c` is straightforward:
+### How the C MCP Server Works
+
+The core logic of the MCP server implements the JSON-RPC 2.0 protocol:
 
 ```c
-// 1. Setup Phase
-const char *path = (argc > 1) ? argv[1] : ".";  // Get directory (default: current)
-DIR *dir = opendir(path);                       // Open the directory
-printf("[\n");                                  // Start JSON array
-
-// 2. Main Loop - For Every File
-while ((entry = readdir(dir))) {
-    if (entry->d_name[0] == '.') continue;      // Skip hidden files (.file)
+// 1. MCP Server Loop
+while (fgets(buffer, sizeof(buffer), stdin)) {
+    // Parse JSON-RPC request
+    cJSON *request = cJSON_Parse(buffer);
     
-    // Build full path: /path/to/dir + / + filename
-    snprintf(fullpath, sizeof(fullpath), "%s/%s", path, entry->d_name);
-    
-    // Get detailed file information
-    if (stat(fullpath, &st) == 0) {
-        // Print JSON object with all file details
-        print_file_info_json(path, entry->d_name, &st);
+    // Handle method calls
+    if (strcmp(method, "tools/call") == 0) {
+        // Extract tool name from parameters
+        if (strcmp(tool_name, "list_files") == 0) {
+            list_files_handler(directory, request_id);
+        }
+        else if (strcmp(tool_name, "get_file_info") == 0) {
+            get_file_info_handler(filename, request_id);
+        }
     }
 }
 
-// 3. Close JSON array
-printf("\n]\n");
+// 2. File Processing (list_files example)
+static void list_files_handler(const char *directory, int id) {
+    DIR *dir = opendir(directory);
+    cJSON *files_array = cJSON_CreateArray();
+    
+    while ((entry = readdir(dir))) {
+        if (entry->d_name[0] == '.') continue;  // Skip hidden files
+        
+        // Get file stats and create JSON object
+        cJSON *file_obj = create_file_json(entry, &st);
+        cJSON_AddItemToArray(files_array, file_obj);
+    }
+    
+    // Send MCP response
+    send_mcp_response(id, files_array);
+}
 ```
 
 **Simple Summary:**
-- **Input:** Directory path (or current directory if none specified)
-- **Process:** Loop through each file → Get details → Print JSON to console
-- **Output:** Complete file information in structured JSON format
+- **Input:** MCP JSON-RPC requests via stdin
+- **Process:** Parse requests → Execute file operations → Build responses
+- **Output:** Structured MCP responses with file data
 
 **For each file, it outputs:**
 - ✅ Name and full path
