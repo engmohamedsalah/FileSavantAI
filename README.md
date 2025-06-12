@@ -55,8 +55,7 @@ OPENAI_API_KEY=sk-your-actual-openai-api-key-here
 ```
 
 > 💡 **Get your OpenAI API key from:** https://platform.openai.com/api-keys
-> 
-> ⚠️ **Important:** Never commit your `.env` file to version control! It's already in `.gitignore`.
+
 
 ### 4. Install Python Dependencies
 ```bash
@@ -66,7 +65,7 @@ pip install -r requirements.txt
 ### 5. Test the Setup
 ```bash
 # Test basic functionality
-python3 ai_integration.py --filename hello_world.txt --question "who owns this file"
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file"
 ```
 
 ## ⚙️ Detailed Setup
@@ -120,19 +119,19 @@ OPENAI_MODEL=gpt-3.5-turbo
 2. **Basic Usage Examples:**
    ```bash
    # Ask who owns a specific file
-   python3 ai_integration.py --filename hello_world.txt --question "who owns this file"
+   python3 ai_integration.py --filename hello_world.txt --query "who owns this file"
    
    # Get detailed information about all files
-   python3 ai_integration.py --question "show me detailed information about all files"
+   python3 ai_integration.py --query "show me detailed information about all files"
    
    # Analyze files in a different directory
-   python3 ai_integration.py --dir /path/to/your/directory --question "list all files with their details"
+   python3 ai_integration.py --dir /path/to/your/directory --query "list all files with their details"
    ```
 
 3. **With Validation (recommended for testing):**
    ```bash
    # Get AI analysis and validate with ls -l
-   python3 ai_integration.py --filename hello_world.txt --question "who owns this file" --validate
+   python3 ai_integration.py --filename hello_world.txt --query "who owns this file" --validate
    ```
 
 ### 🔑 Environment File Setup (Critical Step)
@@ -314,7 +313,7 @@ docker build -t file-savant-ai .
 docker run --rm -it \
   --env-file .env \
   -v $(pwd):/workspace \
-  file-savant-ai --filename hello_world.txt --question "who owns hello_world.txt"
+  file-savant-ai --filename hello_world.txt --query "who owns hello_world.txt"
 ```
 
 ## 📁 Project Structure
