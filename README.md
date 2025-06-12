@@ -183,7 +183,6 @@ The `.env` file is **required** for AI functionality. Here's exactly what to do:
 
 > 🔗 **Get your OpenAI API key here:** https://platform.openai.com/api-keys
 > 
-> 💰 **Note:** OpenAI API usage is pay-per-use. The system uses GPT-3.5-turbo which is very cost-effective.
 
 ## 🔍 Usage
 
