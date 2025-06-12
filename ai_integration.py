@@ -61,16 +61,15 @@ def format_file_size(size):
 
 def analyze_file_ownership(file_info):
     """Analyze and describe file ownership details"""
-    analysis = []
-    
-    # Basic ownership info
-    analysis.append(f"📁 File: {file_info['name']}")
-    analysis.append(f"👤 Owner: {file_info['owner']} (UID: {file_info['uid']})")
-    analysis.append(f"👥 Group: {file_info['group']} (GID: {file_info['gid']})")
-    analysis.append(f"📏 Size: {format_file_size(file_info['size'])}")
-    analysis.append(f"📅 Modified: {format_timestamp(file_info['modified'])}")
-    analysis.append(f"🔐 Permissions: {file_info['permissions_readable']} ({file_info['permissions']})")
-    analysis.append(f"📂 Type: {file_info['type']}")
+    analysis = [
+        f"📁 File: {file_info['name']}",
+        f"👤 Owner: {file_info['owner']} (UID: {file_info['uid']})",
+        f"👥 Group: {file_info['group']} (GID: {file_info['gid']})",
+        f"📏 Size: {format_file_size(file_info['size'])}",
+        f"📅 Modified: {format_timestamp(file_info['modified'])}",
+        f"🔐 Permissions: {file_info['permissions_readable']} ({file_info['permissions']})",
+        f"📂 Type: {file_info['type']}"
+    ]
     
     return "\n".join(analysis)
 
@@ -81,8 +80,7 @@ def answer_ownership_question(files, question, filename=None):
     
     # If filename specified, filter to that file
     if filename:
-        target_files = find_file(files, filename, "contains")
-        if not target_files:
+        if not (target_files := find_file(files, filename, "contains")):
             return f"❌ File '{filename}' not found."
         files = target_files
     
