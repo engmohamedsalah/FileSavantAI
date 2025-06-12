@@ -363,45 +363,33 @@ FileSavantAI combines C-level system operations with AI-powered analysis using M
 
 ```mermaid
 graph TD
-    A["👤 User Query<br/>--query 'who owns file.txt'<br/>--filename file.txt"] --> B["🐍 Python MCP Client<br/>ai_integration.py"]
+    A["👤 User Query<br/>'who owns file.txt'"] --> B["🐍 Python Client"]
     
-    B --> C["📝 JSON-RPC Request<br/>{'method': 'tools/call'<br/>'params': {'name': 'list_files'}}"]
+    B --> C["🔗 MCP Communication<br/>JSON-RPC over pipes"]
     
-    C --> D["🔗 MCP Transport<br/>stdin/stdout pipes<br/>JSON-RPC 2.0 protocol"]
+    C --> D["⚙️ C Server<br/>File operations"]
     
-    D --> E["⚙️ C MCP Server<br/>file_info_mcp_server<br/>File system operations"]
+    D --> C
+    C --> B
     
-    E --> F["📋 JSON-RPC Response<br/>{'result': [file_metadata]}<br/>Owner, permissions, timestamps"]
+    B --> E["🤖 AI Analysis"]
     
-    F --> D
-    D --> B
+    E --> F{"🔑 OpenAI API?"}
     
-    B --> G["🧠 AI Query Parser<br/>Extract match specifications<br/>exact/contains/similar, case-sensitive"]
+    F -->|"✅ Yes"| G["🧠 Smart Answer"]
+    F -->|"❌ No"| H["🔄 Basic Answer"]
     
-    G --> H["🎯 File Filtering<br/>Apply parsed parameters"]
-    
-    H --> I["🤖 OpenAI Analysis<br/>GPT models understand queries"]
-    
-    I --> J{"🔑 API Available?"}
-    
-    J -->|"✅ Yes"| K["🧠 AI Response<br/>Natural language answer"]
-    J -->|"❌ No"| L["🔄 Fallback Analysis<br/>Keyword matching"]
-    
-    K --> M["📋 Final Answer<br/>Intelligent file analysis"]
-    L --> M
+    G --> I["📋 Result"]
+    H --> I
     
     style A fill:#e1f5fe
     style B fill:#e8f5e8
-    style C fill:#fff9c4
-    style D fill:#f3e5f5
-    style E fill:#fff3e0
-    style F fill:#fff9c4
-    style G fill:#fff9c4
-    style H fill:#fff9c4
-    style I fill:#e8f5e8
-    style K fill:#e8f5e8
-    style L fill:#ffebee
-    style M fill:#e1f5fe
+    style C fill:#f3e5f5
+    style D fill:#fff3e0
+    style E fill:#e8f5e8
+    style G fill:#e8f5e8
+    style H fill:#ffebee
+    style I fill:#e1f5fe
 ```
 
 ### Core Features
