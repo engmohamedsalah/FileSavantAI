@@ -363,29 +363,26 @@ FileSavantAI combines C-level system operations with AI-powered analysis using M
 
 ```mermaid
 graph TD
-    A["👤 User Query<br/>'who owns file.txt'"] --> B["🐍 Python Client"]
+    A["👤 User Query<br/>'find files similar to hello'"] --> B{"🔑 AI Available?"}
     
-    B --> C["🔗 MCP Communication<br/>JSON-RPC over pipes"]
+    B -->|"✅ Yes"| C["🧠 AI NLP Analysis<br/>Parse query parameters"]
+    B -->|"❌ No"| D["📝 Default Parameters<br/>contains, case-insensitive"]
     
-    C --> D["⚙️ C Server<br/>File operations"]
+    C --> E["🎯 Extract Parameters<br/>match_type: similar<br/>case_sensitive: false"]
+    D --> E
     
-    D --> C
-    C --> B
+    E --> F["🔧 Choose MCP Tool<br/>list_files vs get_file_info"]
     
-    B --> E{"🔑 Check OpenAI API Key"}
+    F --> G["⚙️ Call C Server<br/>via MCP protocol"]
     
-    E -->|"✅ Key Available"| F["🤖 AI Analysis"]
-    E -->|"❌ No Key/Empty"| G["📝 Basic Fallback Analysis"]
-    
-    F --> H["📋 Result"]
-    G --> H
+    G --> H["📋 Filtered Results"]
     
     style A fill:#e1f5fe
-    style B fill:#e8f5e8
-    style C fill:#f3e5f5
+    style B fill:#e1f5fe
+    style C fill:#e8f5e8
     style D fill:#fff3e0
-    style E fill:#e1f5fe
-    style F fill:#e8f5e8
+    style E fill:#fff9c4
+    style F fill:#f3e5f5
     style G fill:#fff3e0
     style H fill:#e1f5fe
 ```
@@ -505,64 +502,73 @@ The MCP-based system implements a robust pipeline with structured communication 
 
 ```mermaid
 graph TD
-    A["👤 User Input<br/>--query 'who owns file.txt'<br/>--filename file.txt"] --> B["🐍 Python Client<br/>ai_integration.py"]
+    A["👤 Natural Language Query<br/>'find similar files to hello<br/>and explain their permissions'"] --> B{"🔑 AI Available?"}
     
-    B --> C["📝 JSON-RPC Request<br/>{'method': 'tools/call'<br/>'params': {'name': 'list_files'}}"]
+    B -->|"✅ Yes"| C["🧠 AI Query Analysis"]
+    B -->|"❌ No"| D["📝 Basic Analysis"]
     
-    C --> D["🔗 MCP Communication<br/>stdin/stdout pipes"]
+    subgraph AI_Analysis ["AI-Powered Analysis"]
+        C --> E["1️⃣ Extract Search Parameters<br/>match_type: similar<br/>case_sensitive: false"]
+        E --> F["2️⃣ Identify Required Data<br/>permissions, name"]
+        F --> G["3️⃣ Select MCP Tools<br/>list_files → get_file_info"]
+    end
     
-    D --> E["⚙️ C MCP Server<br/>file_info_mcp_server"]
+    subgraph Basic_Analysis ["Basic Analysis"]
+        D --> H["1️⃣ Use Default Parameters<br/>match_type: contains"]
+        H --> I["2️⃣ Basic Keyword Match<br/>permissions, name"]
+        I --> J["3️⃣ Default MCP Tool<br/>list_files"]
+    end
     
-    E --> F["📁 File System Operations<br/>stat(), readdir(), lstat()"]
+    G --> K["⚙️ Execute MCP Calls"]
+    J --> K
     
-    F --> G["📋 JSON-RPC Response<br/>{'result': [file_metadata]}"]
+    K --> L["📋 Process Results"]
     
-    G --> D
-    D --> H["🐍 Python Client<br/>Receives file data"]
-    
-    H --> I{"🔑 Check OpenAI API Key"}
-    
-    I -->|"✅ Key Available"| J["🧠 AI Query Parser<br/>Extract match specifications"]
-    I -->|"❌ No Key/Empty"| K["📝 Basic File Filtering<br/>Default parameters"]
-    
-    J --> L["🎯 File Filtering<br/>Apply parsed parameters"]
-    
-    L --> M["🤖 OpenAI Analysis<br/>Natural language processing"]
-    
-    K --> N["🔄 Fallback Analysis<br/>Keyword matching"]
-    
-    M --> O["✅ Output<br/>Natural language answer"]
-    N --> O
+    L --> M["🤖 Generate Response"]
     
     style A fill:#e1f5fe
-    style B fill:#e8f5e8
-    style C fill:#fff9c4
-    style D fill:#f3e5f5
-    style E fill:#fff3e0
-    style F fill:#fff3e0
-    style G fill:#fff9c4
-    style H fill:#e8f5e8
-    style I fill:#e1f5fe
-    style J fill:#fff9c4
+    style B fill:#e1f5fe
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fff9c4
+    style F fill:#fff9c4
+    style G fill:#f3e5f5
+    style H fill:#fff3e0
+    style I fill:#fff3e0
+    style J fill:#fff3e0
     style K fill:#fff3e0
-    style L fill:#fff9c4
-    style M fill:#e8f5e8
-    style N fill:#ffebee
-    style O fill:#e1f5fe
+    style L fill:#e8f5e8
+    style M fill:#e1f5fe
+    
+    style AI_Analysis fill:#f8f9fa,stroke:#4caf50
+    style Basic_Analysis fill:#f8f9fa,stroke:#ff9800
 ```
 
-**Detailed Communication Flow:**
+**AI-Powered Query Analysis Flow:**
 
-1. **🐍 Python Client**: Receives user query and filename
-2. **📝 Request Formation**: Creates JSON-RPC request for file operations
-3. **🔗 MCP Transport**: Sends request via stdin/stdout pipes
-4. **⚙️ C Server Processing**: Executes file system operations
-5. **📋 Response Formation**: Packages file metadata in JSON-RPC response
-6. **🔗 MCP Transport**: Returns response via pipes
-7. **🔑 API Key Check**: Determines if OpenAI API is available
-8. **🧠 AI Processing**: If API available, analyzes query and filters files intelligently
-9. **📝 Fallback Processing**: If no API, uses basic keyword matching
-10. **🤖 Output Generation**: Creates natural language response based on available mode
+1. **🧠 Natural Language Understanding**
+   - Takes user's natural language query
+   - Determines the intent and required information
+   - Example: "find similar files to hello and explain their permissions"
+
+2. **🎯 Parameter Extraction (AI Mode)**
+   - **Search Parameters**: match_type, case_sensitivity
+   - **Required Data**: file attributes needed (permissions, names)
+   - **Tool Selection**: Determines which MCP tools to call
+
+3. **⚡ Fallback Mode (No AI)**
+   - Uses default parameters (contains, case-insensitive)
+   - Basic keyword matching for attributes
+   - Simplified tool selection
+
+4. **🔧 MCP Tool Execution**
+   - `list_files`: Get initial file list
+   - `get_file_info`: Fetch detailed information
+   - Filters and processes results
+
+5. **📋 Response Generation**
+   - AI Mode: Intelligent natural language response
+   - Basic Mode: Simple attribute listing
 
 **MCP Communication Example:**
 
