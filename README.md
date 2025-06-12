@@ -377,14 +377,20 @@ graph TD
     
     G --> H["📋 Filtered Results"]
     
-    style A fill:#e1f5fe
-    style B fill:#e1f5fe
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fff9c4
-    style F fill:#f3e5f5
-    style G fill:#fff3e0
-    style H fill:#e1f5fe
+    %% Color scheme:
+    %% Blue shades for input/output
+    %% Green shades for AI processing
+    %% Orange shades for basic processing
+    %% Purple for MCP operations
+    
+    style A fill:#2196f3,color:#fff
+    style B fill:#1976d2,color:#fff
+    style C fill:#4caf50,color:#fff
+    style D fill:#ff9800,color:#fff
+    style E fill:#66bb6a,color:#000
+    style F fill:#673ab7,color:#fff
+    style G fill:#ff9800,color:#fff
+    style H fill:#2196f3,color:#fff
 ```
 
 ### Core Features
@@ -526,22 +532,28 @@ graph TD
     
     L --> M["🤖 Generate Response"]
     
-    style A fill:#e1f5fe
-    style B fill:#e1f5fe
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fff9c4
-    style F fill:#fff9c4
-    style G fill:#f3e5f5
-    style H fill:#fff3e0
-    style I fill:#fff3e0
-    style J fill:#fff3e0
-    style K fill:#fff3e0
-    style L fill:#e8f5e8
-    style M fill:#e1f5fe
+    %% Color scheme:
+    %% Blue shades for input/output
+    %% Green shades for AI processing
+    %% Orange shades for basic processing
+    %% Purple for MCP operations
     
-    style AI_Analysis fill:#f8f9fa,stroke:#4caf50
-    style Basic_Analysis fill:#f8f9fa,stroke:#ff9800
+    style A fill:#2196f3,color:#fff
+    style B fill:#1976d2,color:#fff
+    style C fill:#4caf50,color:#fff
+    style D fill:#ff9800,color:#fff
+    style E fill:#66bb6a,color:#000
+    style F fill:#81c784,color:#000
+    style G fill:#7e57c2,color:#fff
+    style H fill:#ffa726,color:#000
+    style I fill:#ffb74d,color:#000
+    style J fill:#ffcc80,color:#000
+    style K fill:#673ab7,color:#fff
+    style L fill:#4caf50,color:#fff
+    style M fill:#2196f3,color:#fff
+    
+    style AI_Analysis fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style Basic_Analysis fill:#fff3e0,stroke:#ff9800,stroke-width:2px
 ```
 
 **AI-Powered Query Analysis Flow:**
