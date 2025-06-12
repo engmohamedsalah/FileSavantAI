@@ -131,6 +131,12 @@ def main():
     
     args = parser.parse_args()
 
+    # Validate mutually exclusive options
+    if args.list_all and args.filename:
+        print("❌ Error: --list-all and --filename cannot be used together")
+        print("   Use --list-all to see all files, or --filename to analyze a specific file")
+        return
+
     print(f"🔍 Analyzing files in '{args.dir}'...")
     
     # Run the enhanced C program
