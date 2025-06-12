@@ -363,78 +363,120 @@ The FileSavantAI system follows a sophisticated pipeline that integrates C-level
 
 ```mermaid
 graph TD
-    A[User Input] --> B{Command Type?}
+    A["User Command<br/>python3 ai_integration.py"] --> B["Parse Arguments<br/>argparse"]
     
-    B -->|--list-all| C[List All Files Mode]
-    B -->|--filename specified| D[Specific File Analysis]
-    B -->|Directory Analysis| E[Directory-wide Analysis]
+    B --> C{"Mutual Exclusivity Check"}
+    C -->|"--list-all AND --filename"| D["Error: Mutually Exclusive<br/>Exit with Error Message"]
+    C -->|"Valid Arguments"| E["Print: Analyzing files in directory"]
     
-    C --> F[Run C Program]
-    D --> F
-    E --> F
+    E --> F["Run C Program<br/>subprocess.run file_info"]
     
-    F --> G[./file_info directory_path]
-    G --> H{C Program Success?}
+    F --> G{"C Program Success?"}
+    G -->|"Success"| H["Raw JSON Output<br/>from stdout"]
+    G -->|"Failure"| I["Print Error Message<br/>Return None"]
     
-    H -->|Success| I[JSON Output<br/>Files Metadata]
-    H -->|Error| J[Error Response<br/>JSON Format]
+    H --> J["Parse JSON<br/>json.loads"]
+    J --> K{"JSON Valid?"}
+    K -->|"Valid"| L["Files List Created"]
+    K -->|"Invalid"| M["Print JSON Error<br/>Return Empty List"]
     
-    I --> K[Parse JSON in Python]
-    J --> K
+    L --> N{"Any Files Found?"}
+    N -->|"No Files"| O["Print: No files found<br/>Exit"]
+    N -->|"Files Found"| P["Print: Found X files"]
     
-    K --> L{Filename Filter?}
-    L -->|Yes| M[Filter Files by<br/>Match Type]
-    L -->|No| N[Use All Files]
+    P --> Q{"Command Mode?"}
+    Q -->|"--list-all"| R["Display All Files<br/>analyze_file_ownership"]
+    Q -->|"Question Mode"| S["Prepare for AI Analysis"]
     
-    M --> O[Apply Search Strategy]
-    O --> P{Files Found?}
-    P -->|Yes| Q[Filtered File List]
-    P -->|No| R[File Not Found Error]
+    S --> T["Call answer_file_question_with_ai"]
+    T --> U{"Filename Specified?"}
+    U -->|"Yes"| V["Filter Files<br/>find_file with match_type"]
+    U -->|"No"| W["Use All Files"]
     
-    N --> Q
-    R --> S[Return Error Message]
+    V --> X{"Files Found After Filter?"}
+    X -->|"No"| Y["Return: File not found"]
+    X -->|"Yes"| Z["Filtered Files List"]
     
-    Q --> T{AI Available?}
-    T -->|API Key Present| U[OpenAI API Call]
-    T -->|No API Key| V[Fallback Analysis]
+    W --> Z
+    Z --> AA{"Check OpenAI API Key"}
+    AA -->|"No API Key"| BB["Return: API key not found"]
+    AA -->|"API Key Present"| CC["Format File Data<br/>Create file_data_summary"]
     
-    U --> W[GPT Model Analysis<br/>configurable model]
-    W --> X{API Success?}
-    X -->|Success| Y[AI Generated Response]
-    X -->|Error| V
+    CC --> DD["Create AI Prompts<br/>system_prompt + user_prompt"]
+    DD --> EE["Get Model from ENV<br/>OPENAI_MODEL or default"]
+    EE --> FF["OpenAI API Call<br/>ChatCompletion.create"]
     
-    V --> Z[Keyword-based Analysis<br/>Pattern Matching]
-    Z --> AA[Fallback Response]
+    FF --> GG{"API Call Success?"}
+    GG -->|"Success"| HH["Format AI Response<br/>Return with emoji prefix"]
+    GG -->|"Failure/Exception"| II["Print Warning<br/>Call fallback_file_analysis"]
     
-    Y --> BB[Format Response]
-    AA --> BB
+    II --> JJ["Keyword Analysis<br/>Check for own, permission, size"]
+    JJ --> KK["Return Fallback Response"]
     
-    BB --> CC{Validation Requested?}
-    CC -->|--validate flag| DD[Run ls -l Command]
-    CC -->|No validation| EE[Final Output]
+    HH --> LL["Print AI Analysis Result"]
+    KK --> LL
+    Y --> LL
+    BB --> LL
     
-    DD --> FF[Cross-validate Results]
-    FF --> EE
+    LL --> MM{"--validate Flag?"}
+    MM -->|"Yes"| NN["Determine Target Files<br/>filename or first 3 files"]
+    MM -->|"No"| OO["End Program"]
     
-    EE --> GG[Display to User]
+    NN --> PP["For Each Target File<br/>Run ls -l command"]
+    PP --> QQ["Print Validation Results"]
+    QQ --> OO
+    
+    R --> MM
     
     style A fill:#e1f5fe
-    style G fill:#f3e5f5
-    style I fill:#e8f5e8
-    style U fill:#fff3e0
-    style W fill:#fff3e0
-    style V fill:#ffebee
-    style GG fill:#e8f5e8
+    style F fill:#f3e5f5
+    style H fill:#e8f5e8
+    style CC fill:#fff3e0
+    style FF fill:#fff3e0
+    style II fill:#ffebee
+    style JJ fill:#ffebee
+    style OO fill:#e8f5e8
 ```
 
 ### Pipeline Stages Explained
 
-1. **🔤 Input Processing**: Command-line arguments are parsed and validated
-2. **⚙️ C Program Execution**: System-level file operations generate JSON metadata
-3. **📊 Data Processing**: Python parses JSON and applies filtering logic
-4. **🤖 AI Analysis**: OpenAI models or fallback analysis process the data
-5. **✅ Validation**: Optional cross-validation with system commands
-6. **📋 Output**: Formatted results presented to user
+1. **🔤 Input Processing**: 
+   - Parse command-line arguments with `argparse`
+   - Validate mutual exclusivity (--list-all vs --filename)
+   
+2. **⚙️ C Program Execution**: 
+   - Execute `./file_info [directory]` via `subprocess.run()`
+   - Capture JSON output from stdout or handle errors
+   
+3. **📊 JSON Processing**: 
+   - Parse JSON with `json.loads()`
+   - Convert to Python file objects list
+   - Handle parsing errors gracefully
+   
+4. **🎯 File Filtering** (if filename specified):
+   - Apply search strategy: exact, contains, or similar
+   - Use case-sensitive or case-insensitive matching
+   - Return filtered file list or "not found" error
+   
+5. **🤖 AI Analysis**:
+   - Check for OpenAI API key availability
+   - Format file data for AI consumption
+   - Create system and user prompts
+   - Call OpenAI API with configurable model
+   - Handle API failures with automatic fallback
+   
+6. **🔄 Fallback Analysis** (when AI unavailable):
+   - Keyword-based pattern matching
+   - Check for "own", "permission", "size" in questions
+   - Generate structured responses
+   
+7. **✅ Validation** (optional with --validate):
+   - Run `ls -l` on target files
+   - Cross-validate AI results with system output
+   
+8. **📋 Output Formatting**:
+   - Display results with emoji formatting
+   - Show validation comparisons if requested
 
 ### Two-Part Design (Task 2 Compliance)
 
