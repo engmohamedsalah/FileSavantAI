@@ -363,35 +363,44 @@ FileSavantAI combines C-level system operations with AI-powered analysis using M
 
 ```mermaid
 graph TD
-    A["👤 User Natural Language Query<br/>with optional file targeting"] --> B["🔍 FileSavantAI MCP System"]
+    A["👤 User Query<br/>--query 'who owns file.txt'<br/>--filename file.txt"] --> B["🐍 Python MCP Client<br/>ai_integration.py"]
     
-    B --> C["🔌 MCP Client (Python)<br/>Sends structured requests"]
-    C --> D["⚙️ MCP Server (C)<br/>File system operations"]
-    D --> E["📊 Structured Response<br/>File metadata via MCP protocol"]
+    B --> C["📝 JSON-RPC Request<br/>{'method': 'tools/call'<br/>'params': {'name': 'list_files'}}"]
     
-    E --> F["🧠 AI Query Parser<br/>Extracts match type & case sensitivity"]
-    F --> G["🎯 File Filtering<br/>Apply parsed parameters"]
+    C --> D["🔗 MCP Transport<br/>stdin/stdout pipes<br/>JSON-RPC 2.0 protocol"]
     
-    G --> H["🤖 AI Analysis<br/>GPT models understand natural queries"]
-    H --> I{"🔑 API Available?"}
+    D --> E["⚙️ C MCP Server<br/>file_info_mcp_server<br/>File system operations"]
     
-    I -->|"✅ Yes"| J["🧠 OpenAI Response<br/>Natural language answer"]
-    I -->|"❌ No"| K["🔄 Fallback Analysis<br/>Keyword matching"]
+    E --> F["📋 JSON-RPC Response<br/>{'result': [file_metadata]}<br/>Owner, permissions, timestamps"]
     
-    J --> L["✅ Validation<br/>Cross-check with ls -l"]
-    K --> L
+    F --> D
+    D --> B
     
-    L --> M["📋 Final Answer<br/>Intelligent file analysis"]
+    B --> G["🧠 AI Query Parser<br/>Extract match specifications<br/>exact/contains/similar, case-sensitive"]
+    
+    G --> H["🎯 File Filtering<br/>Apply parsed parameters"]
+    
+    H --> I["🤖 OpenAI Analysis<br/>GPT models understand queries"]
+    
+    I --> J{"🔑 API Available?"}
+    
+    J -->|"✅ Yes"| K["🧠 AI Response<br/>Natural language answer"]
+    J -->|"❌ No"| L["🔄 Fallback Analysis<br/>Keyword matching"]
+    
+    K --> M["📋 Final Answer<br/>Intelligent file analysis"]
+    L --> M
     
     style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fff9c4
+    style B fill:#e8f5e8
+    style C fill:#fff9c4
+    style D fill:#f3e5f5
+    style E fill:#fff3e0
     style F fill:#fff9c4
-    style H fill:#e8f5e8
-    style J fill:#e8f5e8
-    style K fill:#ffebee
+    style G fill:#fff9c4
+    style H fill:#fff9c4
+    style I fill:#e8f5e8
+    style K fill:#e8f5e8
+    style L fill:#ffebee
     style M fill:#e1f5fe
 ```
 
