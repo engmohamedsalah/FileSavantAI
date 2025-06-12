@@ -321,10 +321,12 @@ docker run --rm -it \
 
 ```
 FileSavantAI/
-├── file_info.c              # Enhanced C program with JSON output
-├── file_info                # Compiled C executable
-├── ai_integration.py        # AI-powered Python analysis script
-├── test_ai_integration.py   # Comprehensive test suite
+├── file_info_mcp_server.c   # MCP server (C) - file system operations
+├── file_info_mcp_server     # Compiled MCP server executable
+├── ai_integration.py        # MCP client (Python) - AI analysis
+├── test_ai_integration.py   # Comprehensive test suite (17 tests)
+├── file_info.c              # Legacy C program (still available)
+├── file_info                # Legacy compiled executable
 ├── hello_world.txt          # Test file
 ├── README.md               # Documentation
 ├── requirements.txt        # Python dependencies (openai, python-dotenv)
@@ -502,15 +504,100 @@ static void list_files_handler(const char *directory, int id) {
 - ✅ Timestamps (modified, accessed, changed)
 - ✅ System info (inode, device, hard links, blocks)
 
-### Data Flow
+### Data Flow Pipeline
 
-The hybrid system implements a robust pipeline with natural language parsing and fallback mechanisms:
+The MCP-based system implements a robust pipeline with structured communication and natural language parsing:
 
+```mermaid
+graph TD
+    A["👤 User Input<br/>--query 'who owns file.txt'<br/>--filename file.txt"] --> B["🐍 Python Client<br/>ai_integration.py"]
+    
+    B --> C["📝 JSON-RPC Request<br/>{'method': 'tools/call'<br/>'params': {'name': 'list_files'}}"]
+    
+    C --> D["🔗 MCP Communication<br/>stdin/stdout pipes"]
+    
+    D --> E["⚙️ C MCP Server<br/>file_info_mcp_server"]
+    
+    E --> F["📁 File System Operations<br/>stat(), readdir(), lstat()"]
+    
+    F --> G["📋 JSON-RPC Response<br/>{'result': [file_metadata]}"]
+    
+    G --> D
+    D --> H["🐍 Python Client<br/>Receives file data"]
+    
+    H --> I["🧠 AI Query Parser<br/>Extract match specifications"]
+    
+    I --> J["🎯 File Filtering<br/>Apply parsed parameters"]
+    
+    J --> K["🤖 OpenAI Analysis<br/>Natural language processing"]
+    
+    K --> L{"🔑 API Available?"}
+    
+    L -->|"✅ Yes"| M["🧠 AI Response<br/>Intelligent analysis"]
+    L -->|"❌ No"| N["🔄 Fallback Analysis<br/>Keyword matching"]
+    
+    M --> O["✅ Output<br/>Natural language answer"]
+    N --> O
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff9c4
+    style D fill:#f3e5f5
+    style E fill:#fff3e0
+    style F fill:#fff3e0
+    style G fill:#fff9c4
+    style H fill:#e8f5e8
+    style I fill:#fff9c4
+    style J fill:#fff9c4
+    style K fill:#e8f5e8
+    style M fill:#e8f5e8
+    style N fill:#ffebee
+    style O fill:#e1f5fe
 ```
-User Query → Argument Parsing → C Program Execution → JSON Processing → AI Query Parsing → File Filtering → AI Analysis → Validation → Output
+
+**Detailed Communication Flow:**
+
+1. **🐍 Python Client**: Receives user query and filename
+2. **📝 Request Formation**: Creates JSON-RPC request for file operations
+3. **🔗 MCP Transport**: Sends request via stdin/stdout pipes
+4. **⚙️ C Server Processing**: Executes file system operations
+5. **📋 Response Formation**: Packages file metadata in JSON-RPC response
+6. **🔗 MCP Transport**: Returns response via pipes
+7. **🧠 AI Processing**: Analyzes query and filters files
+8. **🤖 Intelligent Output**: Generates natural language response
+
+**MCP Communication Example:**
+
+```json
+Python → C Server:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "list_files",
+    "arguments": {"directory": "."}
+  }
+}
+
+C Server → Python:
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "hello_world.txt",
+      "size": 28,
+      "owner": "msalah",
+      "permissions": "644",
+      "type": "file"
+    }
+  ]
+}
 ```
 
 **Key Pipeline Features:**
+- **🔌 MCP Protocol**: Structured JSON-RPC 2.0 communication
 - **🧠 Natural Language Processing**: Extracts match specifications from user queries
 - **🔄 Error Recovery**: Automatic fallback when AI is unavailable
 - **🎯 Smart Filtering**: AI-parsed search strategies (exact, contains, similar, case-sensitive)
