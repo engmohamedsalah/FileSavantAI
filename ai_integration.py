@@ -73,8 +73,8 @@ def analyze_file_ownership(file_info):
     
     return "\n".join(analysis)
 
-def answer_ownership_question(files, question, filename=None):
-    """Answer questions about file ownership and attributes"""
+def answer_file_question(files, question, filename=None):
+    """Answer questions about file attributes including ownership, permissions, size, timestamps, etc."""
     if not files:
         return "❌ No files found to analyze."
     
@@ -163,7 +163,7 @@ def main():
         else:
             print(f"\n🤖 AI Analysis for all files:")
         
-        answer = answer_ownership_question(files, args.question, args.filename)
+        answer = answer_file_question(files, args.question, args.filename)
         print(answer)
     
     # Validation with ls -l

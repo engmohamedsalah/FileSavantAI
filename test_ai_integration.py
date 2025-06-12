@@ -4,7 +4,7 @@ import io
 import sys
 import json
 from contextlib import redirect_stdout
-from ai_integration import parse_file_info, find_file, run_file_info, answer_ownership_question, format_file_size, format_timestamp, analyze_file_ownership
+from ai_integration import parse_file_info, find_file, run_file_info, answer_file_question, format_file_size, format_timestamp, analyze_file_ownership
 
 class TestEnhancedFileAnalyzer(unittest.TestCase):
 
@@ -192,26 +192,26 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
         formatted = format_timestamp(timestamp)
         self.assertIn("2023", formatted)
 
-    def test_answer_ownership_question_who_owns(self):
+    def test_answer_file_question_who_owns(self):
         """Test answering 'who owns' questions."""
-        answer = answer_ownership_question(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
+        answer = answer_file_question(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
         self.assertIn("john", answer)
         self.assertIn("UID: 1000", answer)
 
-    def test_answer_ownership_question_permissions(self):
+    def test_answer_file_question_permissions(self):
         """Test answering permission questions."""
-        answer = answer_ownership_question(self.expected_parsed_data, "what are the permissions", "hello_world.txt")
+        answer = answer_file_question(self.expected_parsed_data, "what are the permissions", "hello_world.txt")
         self.assertIn("-rw-r--r--", answer)
         self.assertIn("644", answer)
 
-    def test_answer_ownership_question_size(self):
+    def test_answer_file_question_size(self):
         """Test answering size questions."""
-        answer = answer_ownership_question(self.expected_parsed_data, "what is the size", "hello_world.txt")
+        answer = answer_file_question(self.expected_parsed_data, "what is the size", "hello_world.txt")
         self.assertIn("28.0 B", answer)
 
-    def test_answer_ownership_question_group(self):
+    def test_answer_file_question_group(self):
         """Test answering group questions."""
-        answer = answer_ownership_question(self.expected_parsed_data, "what group", "hello_world.txt")
+        answer = answer_file_question(self.expected_parsed_data, "what group", "hello_world.txt")
         self.assertIn("users", answer)
         self.assertIn("GID: 100", answer)
 
@@ -246,12 +246,12 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
 
     def test_answer_no_files(self):
         """Test answering questions when no files are found."""
-        answer = answer_ownership_question([], "who owns test", "test")
+        answer = answer_file_question([], "who owns test", "test")
         self.assertIn("No files found", answer)
 
     def test_answer_file_not_found(self):
         """Test answering questions when specific file is not found."""
-        answer = answer_ownership_question(self.expected_parsed_data, "who owns test", "nonexistent.txt")
+        answer = answer_file_question(self.expected_parsed_data, "who owns test", "nonexistent.txt")
         self.assertIn("not found", answer)
 
 if __name__ == '__main__':
