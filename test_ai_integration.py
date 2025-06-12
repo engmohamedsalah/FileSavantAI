@@ -234,7 +234,7 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
         mock_process.wait.return_value = 0
         mock_popen.return_value = mock_process
         
-        files = run_file_info_simple_rpc("/fake/dir")
+        files = run_file_info_simple_rpc("/fake/dir", suppress_errors=True)
         self.assertEqual(len(files), 1)
         self.assertEqual(files[0]['name'], 'test.txt')
 
@@ -242,7 +242,7 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
     def test_run_file_info_mcp_failure(self, mock_popen):
         """Test the MCP server communication on failure."""
         mock_popen.side_effect = Exception("MCP server failed")
-        files = run_file_info_simple_rpc(".")
+        files = run_file_info_simple_rpc(".", suppress_errors=True)
         self.assertEqual(files, [])
 
     def test_answer_no_files(self):

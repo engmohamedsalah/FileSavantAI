@@ -21,7 +21,7 @@ except ImportError:
     print("❌ OpenAI library not found. Please install: pip install openai")
     exit(1)
 
-def run_file_info_simple_rpc(directory="."):
+def run_file_info_simple_rpc(directory=".", suppress_errors=False):
     """Use simple JSON-RPC to get file information quickly"""
     try:
         # Start the server process
@@ -61,7 +61,8 @@ def run_file_info_simple_rpc(directory="."):
         return []
         
     except Exception as e:
-        print(f"❌ Error communicating with file server: {e}")
+        if not suppress_errors:
+            print(f"❌ Error communicating with file server: {e}")
         return []
 
 # Import all the other functions from the original file
