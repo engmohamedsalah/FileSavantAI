@@ -122,11 +122,11 @@ OPENAI_MODEL=gpt-3.5-turbo
    # Ask who owns a specific file
    python3 ai_integration.py --filename hello_world.txt --question "who owns this file"
    
-   # List all files with detailed information
-   python3 ai_integration.py --list-all
+   # Get detailed information about all files
+   python3 ai_integration.py --question "show me detailed information about all files"
    
    # Analyze files in a different directory
-   python3 ai_integration.py --dir /path/to/your/directory --list-all
+   python3 ai_integration.py --dir /path/to/your/directory --question "list all files with their details"
    ```
 
 3. **With Validation (recommended for testing):**
@@ -191,28 +191,28 @@ The `.env` file is **required** for AI functionality. Here's exactly what to do:
 ### Basic File Analysis
 ```bash
 # Analyze a specific file
-python3 ai_integration.py --filename hello_world.txt --question "who owns hello_world.txt"
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file"
 
 # Get comprehensive information about a file
-python3 ai_integration.py --filename hello_world.txt --list-all
+python3 ai_integration.py --filename hello_world.txt --query "show me all details about this file"
 
 # Validate results with ls -l
-python3 ai_integration.py --filename hello_world.txt --question "who owns" --validate
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file" --validate
 ```
 
-### Advanced Search Options
+### Advanced Search Options with Natural Language
 ```bash
-# Exact filename match (case matters for exact matching)
-python3 ai_integration.py --filename hello_world.txt --match-type exact
+# Exact filename match
+python3 ai_integration.py --filename hello_world.txt --query "show exact match with all details"
 
-# Case-sensitive search
-python3 ai_integration.py --filename Hello_World.txt --case-sensitive
+# Case-sensitive search  
+python3 ai_integration.py --filename Hello_World.txt --query "find case-sensitive exact match"
 
 # Search in specific directory
-python3 ai_integration.py --dir /path/to/directory --filename config.txt
+python3 ai_integration.py --dir /path/to/directory --filename config.txt --query "who owns this file"
 
 # Similar matching (fuzzy search)
-python3 ai_integration.py --filename hello --match-type similar
+python3 ai_integration.py --filename hello --query "find similar matches and show ownership"
 ```
 
 ### 🤖 AI-Powered Analysis
@@ -220,22 +220,24 @@ The system uses **configurable OpenAI models** (default: GPT-3.5-turbo) to intel
 
 ```bash
 # Ownership questions
-python3 ai_integration.py --filename hello_world.txt --question "who owns hello_world.txt"
-python3 ai_integration.py --filename hello_world.txt --question "who created this file"
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file"
+python3 ai_integration.py --filename hello_world.txt --query "who created this file"
 
 # Permission questions
-python3 ai_integration.py --filename hello_world.txt --question "what are the permissions"
-python3 ai_integration.py --filename hello_world.txt --question "can others read this file"
+python3 ai_integration.py --filename hello_world.txt --query "what are the permissions"
+python3 ai_integration.py --filename hello_world.txt --query "can others read this file"
 
 # Size and timestamp questions
-python3 ai_integration.py --filename hello_world.txt --question "what is the file size"
-python3 ai_integration.py --filename hello_world.txt --question "when was it modified"
+python3 ai_integration.py --filename hello_world.txt --query "what is the file size"
+python3 ai_integration.py --filename hello_world.txt --query "when was it modified"
 
 # Group questions
-python3 ai_integration.py --filename hello_world.txt --question "what group owns this file"
+python3 ai_integration.py --filename hello_world.txt --query "what group owns this file"
 
-# Complex natural language questions
-python3 ai_integration.py --filename hello_world.txt --question "explain the file permissions and what they mean"
+# Complex natural language questions with search specifications
+python3 ai_integration.py --filename hello_world.txt --query "explain the file permissions and what they mean"
+python3 ai_integration.py --filename Hello_World.txt --query "find exact case-sensitive match and show all details"
+python3 ai_integration.py --filename hello --query "find similar matches and explain their ownership"
 ```
 
 ## 📊 JSON Output Format
@@ -342,16 +344,12 @@ python3 ai_integration.py [OPTIONS]
 Options:
   --dir DIRECTORY          Directory to search (default: current)
   --filename FILENAME      Specific file to analyze
-  --question QUESTION      Question to ask about the file(s) (default: "who owns")
-  --match-type TYPE        How to match filenames: exact, contains, similar (default: contains)
-  --case-sensitive         Enable case-sensitive filename matching
+  --query QUERY            Natural language query about the file(s)
   --validate               Validate results with ls -l command
-  --list-all              List all files with detailed information
   --help                   Show help message
 
 Important Notes:
-- --list-all and --filename are mutually exclusive
-- exact match type is case-sensitive by nature
+- Use natural language to specify match types: "exact match", "case-sensitive", etc.
 - AI requires OPENAI_API_KEY in .env file (fallback available)
 ```
 
@@ -363,42 +361,49 @@ FileSavantAI combines C-level system operations with AI-powered analysis to answ
 
 ```mermaid
 graph TD
-    A["👤 User Question<br/>about file ownership"] --> B["🔍 FileSavantAI System"]
+    A["👤 User Natural Language Query<br/>with optional file targeting"] --> B["🔍 FileSavantAI Hybrid System"]
     
     B --> C["⚙️ C Program<br/>Extracts file metadata"]
     C --> D["📊 JSON Data<br/>owner, permissions, timestamps"]
     
-    D --> E["🤖 AI Analysis<br/>GPT models understand questions"]
-    E --> F{"🔑 API Available?"}
+    D --> E["🧠 AI Query Parser<br/>Extracts match type & case sensitivity"]
+    E --> F["🎯 File Filtering<br/>Apply parsed parameters"]
     
-    F -->|"✅ Yes"| G["🧠 OpenAI Response<br/>Natural language answer"]
-    F -->|"❌ No"| H["🔄 Fallback Analysis<br/>Keyword matching"]
+    F --> G["🤖 AI Analysis<br/>GPT models understand natural queries"]
+    G --> H{"🔑 API Available?"}
     
-    G --> I["✅ Validation<br/>Cross-check with ls -l"]
-    H --> I
+    H -->|"✅ Yes"| I["🧠 OpenAI Response<br/>Natural language answer"]
+    H -->|"❌ No"| J["🔄 Fallback Analysis<br/>Keyword matching"]
     
-    I --> J["📋 Final Answer<br/>Who owns the file?"]
+    I --> K["✅ Validation<br/>Cross-check with ls -l"]
+    J --> K
+    
+    K --> L["📋 Final Answer<br/>Intelligent file analysis"]
     
     style A fill:#e1f5fe
     style B fill:#f3e5f5
     style C fill:#fff3e0
-    style E fill:#e8f5e8
+    style E fill:#fff9c4
+    style F fill:#fff9c4
     style G fill:#e8f5e8
-    style H fill:#ffebee
-    style J fill:#e1f5fe
+    style I fill:#e8f5e8
+    style J fill:#ffebee
+    style L fill:#e1f5fe
 ```
 
 ### Core Features
 
-**🎯 The system has 4 main components:**
+**🎯 The hybrid system has 5 main components:**
 
 1. **⚙️ System-Level Data Collection**: C program extracts complete file metadata (owner, permissions, timestamps)
 
-2. **🤖 AI-Powered Understanding**: OpenAI models interpret natural language questions about files
+2. **🧠 Natural Language Parsing**: AI extracts match specifications (exact, contains, similar, case-sensitive) from user queries
 
-3. **🔄 Reliable Fallback**: Automatic keyword-based analysis when AI is unavailable  
+3. **🎯 Smart File Filtering**: Apply parsed parameters to target the right files
 
-4. **✅ Validation**: Cross-check results with system commands for accuracy
+4. **🤖 AI-Powered Understanding**: OpenAI models interpret natural language queries about files
+
+5. **🔄 Reliable Fallback**: Automatic keyword-based analysis when AI is unavailable with validation
 
 ### Two-Part Design (Task 2 Compliance)
 
@@ -409,20 +414,15 @@ graph TD
    - Supports all major file types (files, directories, symlinks, devices, etc.)
 
 2. **AI-Powered Python Integration (`ai_integration.py`)**:
-   - Uses OpenAI GPT-3.5-turbo for intelligent question answering
+   - Uses OpenAI GPT-3.5-turbo for intelligent query answering
+   - Parses natural language for match specifications (exact, contains, similar, case-sensitive)
    - Converts file metadata into natural language responses
-   - Handles complex questions beyond simple keyword matching
+   - Handles complex queries beyond simple keyword matching
    - Includes automatic fallback analysis when AI is unavailable
    - Validates results using `ls -l` for accuracy
-   - Supports multiple search strategies and case sensitivity
+   - Hybrid approach: explicit arguments for core functionality, natural language for specifications
 
-### Recent Improvements
 
-- **Bug Fix**: Exact matching now properly respects `--match-type exact` parameter
-- **Parameter Validation**: `--list-all` and `--filename` are now mutually exclusive with helpful error messages
-- **Enhanced AI Integration**: Real OpenAI GPT-3.5-turbo integration with structured prompts
-- **Fallback Mechanism**: Automatic keyword-based analysis when AI is unavailable
-- **Code Quality**: Extracted `get_file_type()` function for better maintainability
 
 ### How the C Program Works
 
@@ -468,18 +468,20 @@ printf("\n]\n");
 
 ### Data Flow
 
-The system implements a robust pipeline with multiple decision points and fallback mechanisms:
+The hybrid system implements a robust pipeline with natural language parsing and fallback mechanisms:
 
 ```
-User Input → Command Parsing → C Program Execution → JSON Processing → File Filtering → AI Analysis → Validation → Output
+User Query → Argument Parsing → C Program Execution → JSON Processing → AI Query Parsing → File Filtering → AI Analysis → Validation → Output
 ```
 
 **Key Pipeline Features:**
+- **🧠 Natural Language Processing**: Extracts match specifications from user queries
 - **🔄 Error Recovery**: Automatic fallback when AI is unavailable
-- **🎯 Smart Filtering**: Multiple search strategies (exact, contains, similar)
+- **🎯 Smart Filtering**: AI-parsed search strategies (exact, contains, similar, case-sensitive)
 - **✅ Validation**: Cross-checking with system commands
-- **🧠 AI Flexibility**: Configurable model selection
+- **🤖 AI Flexibility**: Configurable model selection
 - **📊 Rich Metadata**: Comprehensive file information extraction
+- **⚡ Hybrid Efficiency**: Core functionality through arguments, specifications through natural language
 
 ## 📋 Examples
 
@@ -537,43 +539,43 @@ gcc -o file_info file_info.c
 Complete examples of using the AI-powered analysis:
 
 ```bash
-# Basic ownership question
-python3 ai_integration.py --filename hello_world.txt --question "who owns hello_world.txt"
+# Basic ownership query
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file"
 # Output: 🤖 AI Analysis: The file hello_world.txt is owned by msalah (UID: 501)
 
 # Permission analysis
-python3 ai_integration.py --filename hello_world.txt --question "what are the permissions"
+python3 ai_integration.py --filename hello_world.txt --query "what are the permissions"
 # Output: 🤖 AI Analysis: The file has permissions -rw-r--r-- (644), meaning owner can read/write, group and others can only read
 
 # File size information
-python3 ai_integration.py --filename hello_world.txt --question "what is the file size"
+python3 ai_integration.py --filename hello_world.txt --query "what is the file size"
 # Output: 🤖 AI Analysis: The file hello_world.txt is 28.0 B in size
 
 # Group ownership
-python3 ai_integration.py --filename hello_world.txt --question "what group owns this file"
+python3 ai_integration.py --filename hello_world.txt --query "what group owns this file"
 # Output: 🤖 AI Analysis: The file is owned by the staff group (GID: 20)
 
-# Comprehensive file analysis
-python3 ai_integration.py --filename hello_world.txt --list-all
+# Comprehensive file analysis with natural language specifications
+python3 ai_integration.py --filename hello_world.txt --query "show exact match with all details"
 # Output: Complete file details with emojis and formatted information
 
 # Search with validation
-python3 ai_integration.py --filename hello_world.txt --question "who owns" --validate
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file" --validate
 # Output: AI analysis + ls -l validation
 
-# Different match types
-python3 ai_integration.py --filename world --match-type contains
-python3 ai_integration.py --filename hello_world.txt --match-type exact
-python3 ai_integration.py --filename hello --match-type similar
+# Natural language match type specifications
+python3 ai_integration.py --filename world --query "find files containing this name"
+python3 ai_integration.py --filename hello_world.txt --query "show exact match with details"
+python3 ai_integration.py --filename hello --query "find similar matches and show ownership"
 
-# Case-sensitive search
-python3 ai_integration.py --filename Hello_World.txt --case-sensitive
+# Case-sensitive search with natural language
+python3 ai_integration.py --filename Hello_World.txt --query "find case-sensitive exact match"
 
 # Search in specific directory
-python3 ai_integration.py --dir /usr/local --filename bin --question "who owns"
+python3 ai_integration.py --dir /usr/local --filename bin --query "who owns this file"
 
-# Testing exact match functionality (recent bug fix)
-python3 ai_integration.py --filename hello_worl --match-type exact
+# Testing exact match functionality with hybrid model
+python3 ai_integration.py --filename hello_worl --query "show exact match"
 # Output: ❌ File 'hello_worl' not found. (correctly returns not found)
 ```
 
@@ -586,23 +588,23 @@ Run the entire system in a containerized environment:
 docker build -t file-savant-ai .
 
 # Basic Docker run
-docker run --rm -it file-savant-ai --filename hello_world.txt --question "who owns hello_world.txt"
+docker run --rm -it file-savant-ai --filename hello_world.txt --query "who owns this file"
 
 # With environment file and volume mounting
 docker run --rm -it \
   --env-file .env \
   -v $(pwd)/sample_data:/data \
-  file-savant-ai --filename hello_world.txt --list-all
+  file-savant-ai --filename hello_world.txt --query "show me all details"
 
 # Analyze files in mounted directory
 docker run --rm -it \
   -v $(pwd):/workspace \
-  file-savant-ai --dir /workspace --filename README.md --question "what are the permissions"
+  file-savant-ai --dir /workspace --filename README.md --query "what are the permissions"
 
-# Interactive mode
+# Interactive mode with detailed file listing
 docker run --rm -it \
   --env-file .env \
-  file-savant-ai --list-all
+  file-savant-ai --query "list all files with detailed information"
 ```
 
 ### 🔄 Shell Script Examples
@@ -614,16 +616,16 @@ Use the automated rebuild and run script:
 chmod +x rebuild_and_run.sh
 
 # Basic usage - rebuilds image and runs with arguments
-./rebuild_and_run.sh --filename hello_world.txt --question "who owns hello_world.txt"
+./rebuild_and_run.sh --filename hello_world.txt --query "who owns this file"
 
-# List all files in container
-./rebuild_and_run.sh --list-all
+# List all files in container with details
+./rebuild_and_run.sh --query "list all files with their detailed information"
 
-# Ownership question with validation
-./rebuild_and_run.sh --filename hello_world.txt --question "who owns" --validate
+# Ownership query with validation
+./rebuild_and_run.sh --filename hello_world.txt --query "who owns this file" --validate
 
 # Permission analysis
-./rebuild_and_run.sh --filename hello_world.txt --question "what are the permissions"
+./rebuild_and_run.sh --filename hello_world.txt --query "what are the permissions"
 ```
 
 ### 🔍 Complete Workflow Example
@@ -637,15 +639,15 @@ gcc -o file_info file_info.c
 # Step 2: Test C program directly
 ./file_info .
 
-# Step 3: Use Python AI integration
-python3 ai_integration.py --filename hello_world.txt --question "who owns hello_world.txt" --validate
+# Step 3: Use Python AI integration with hybrid model
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file" --validate
 
 # Step 4: Docker containerized version
 docker build -t file-savant-ai .
-docker run --rm -it file-savant-ai --filename hello_world.txt --question "who owns hello_world.txt"
+docker run --rm -it file-savant-ai --filename hello_world.txt --query "who owns this file"
 
 # Step 5: Automated rebuild and run
-./rebuild_and_run.sh --filename hello_world.txt --question "who owns hello_world.txt"
+./rebuild_and_run.sh --filename hello_world.txt --query "who owns this file"
 ```
 
 ## 🔍 Task 2 Validation Example
@@ -653,8 +655,8 @@ docker run --rm -it file-savant-ai --filename hello_world.txt --question "who ow
 The system perfectly meets Task 2 requirements by providing real AI integration:
 
 ```bash
-# Ask AI about file ownership with validation
-python3 ai_integration.py --filename hello_world.txt --question "who owns hello_world.txt" --validate
+# Ask AI about file ownership with validation using hybrid model
+python3 ai_integration.py --filename hello_world.txt --query "who owns this file" --validate
 
 # Expected Output:
 🔍 Analyzing files in '.'...
@@ -669,18 +671,6 @@ The file hello_world.txt is owned by msalah (UID: 501). This user has read and w
     -rw-r--r--@ 1 msalah  staff  28 Jun 10 18:14 hello_world.txt
 ```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
-
 ## 📄 License
 
 This project is open source and available under the MIT License.
-
-## 🔗 Repository
-
-**GitHub**: [https://github.com/engmohamedsalah/FileSavantAI](https://github.com/engmohamedsalah/FileSavantAI) 

@@ -1,10 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
-import io
-import sys
-import json
-from contextlib import redirect_stdout
-from ai_integration import parse_file_info, find_file, run_file_info, answer_file_question_with_ai, format_file_size, format_timestamp, analyze_file_ownership
+
+from ai_integration import parse_file_info, find_file, run_file_info, answer_file_question_with_ai, format_file_size, format_timestamp
 
 class TestEnhancedFileAnalyzer(unittest.TestCase):
 
@@ -221,15 +218,6 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
         self.assertIn("hello_world.txt", answer)
         self.assertIn("john", answer)
 
-    def test_analyze_file_ownership(self):
-        """Test comprehensive file ownership analysis."""
-        file_info = self.expected_parsed_data[1]  # hello_world.txt
-        analysis = analyze_file_ownership(file_info)
-        self.assertIn("File: hello_world.txt", analysis)
-        self.assertIn("Owner: john", analysis)
-        self.assertIn("Group: users", analysis)
-        self.assertIn("Size: 28.0 B", analysis)
-
     @patch('ai_integration.subprocess.run')
     def test_run_file_info_success(self, mock_subprocess_run):
         """Test the enhanced C program runner on success."""
@@ -263,12 +251,12 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
     def test_exact_match_functionality(self):
         """Test that exact matching works correctly."""
         # Should not find "hello_worl" when looking for exact match
-        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns", "hello_worl", "exact")
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns with exact match", "hello_worl")
         self.assertIn("not found", answer)
         
         # Should find exact match
-        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns", "hello_world.txt", "exact")
-        self.assertIn("john", answer)
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns with exact match", "hello_world.txt")
+        self.assertIn("john", answer.lower())
 
 if __name__ == '__main__':
     unittest.main() 
