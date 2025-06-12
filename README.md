@@ -20,9 +20,9 @@ An enhanced AI-powered file analysis tool that combines a C program for system-l
 - **Unix/Linux/macOS**: For system calls and `ls` command
 - **OpenAI API Key**: For AI-powered analysis (optional - fallback available)
 
-## ⚙️ Setup
+## 🚀 Quick Start
 
-### 1. Clone the Repository
+### 1. Clone and Setup
 ```bash
 git clone https://github.com/engmohamedsalah/FileSavantAI.git
 cd FileSavantAI
@@ -33,21 +33,132 @@ cd FileSavantAI
 gcc -o file_info file_info.c
 ```
 
-### 3. Set up OpenAI API Key
-Create a `.env` file with your OpenAI API key:
+### 3. **IMPORTANT: Set up OpenAI API Key**
+The AI features require an OpenAI API key. Follow these steps:
+
 ```bash
+# Step 1: Copy the example file
 cp .env.example .env
-# Edit .env and add your actual OpenAI API key
-# OPENAI_API_KEY=your_api_key_here
+
+# Step 2: Edit the .env file and add your OpenAI API key
+# Open .env in your favorite editor and replace the placeholder:
+nano .env
+# or
+vim .env
+# or
+code .env
 ```
+
+**In the `.env` file, add your actual OpenAI API key:**
+```bash
+OPENAI_API_KEY=sk-your-actual-openai-api-key-here
+```
+
+> 💡 **Get your OpenAI API key from:** https://platform.openai.com/api-keys
+> 
+> ⚠️ **Important:** Never commit your `.env` file to version control! It's already in `.gitignore`.
 
 ### 4. Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Make the Executable Available
-Ensure the compiled `file_info` program is in the same directory as `ai_integration.py` or in your PATH.
+### 5. Test the Setup
+```bash
+# Test basic functionality
+python3 ai_integration.py --filename hello_world.txt --question "who owns this file"
+```
+
+## ⚙️ Detailed Setup
+
+If you need more detailed setup instructions or encounter issues:
+
+### Alternative Python Environment Setup
+```bash
+# Using virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Troubleshooting
+- **Missing OpenAI API Key**: The system will fall back to keyword-based analysis
+- **Compilation Issues**: Make sure you have GCC installed (`gcc --version`)
+- **Permission Denied**: Make sure the compiled executable has execute permissions (`chmod +x file_info`)
+
+## 🏃 How to Run
+
+### Step-by-Step Running Instructions
+
+1. **Ensure everything is compiled and set up:**
+   ```bash
+   # Verify C program is compiled
+   ls -la file_info
+   
+   # Verify .env file exists with API key
+   cat .env
+   ```
+
+2. **Basic Usage Examples:**
+   ```bash
+   # Ask who owns a specific file
+   python3 ai_integration.py --filename hello_world.txt --question "who owns this file"
+   
+   # List all files with detailed information
+   python3 ai_integration.py --list-all
+   
+   # Analyze files in a different directory
+   python3 ai_integration.py --dir /path/to/your/directory --list-all
+   ```
+
+3. **With Validation (recommended for testing):**
+   ```bash
+   # Get AI analysis and validate with ls -l
+   python3 ai_integration.py --filename hello_world.txt --question "who owns this file" --validate
+   ```
+
+### 🔑 Environment File Setup (Critical Step)
+
+The `.env` file is **required** for AI functionality. Here's exactly what to do:
+
+1. **Copy the template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit the file** (choose your preferred editor):
+   ```bash
+   # Using nano (beginner-friendly)
+   nano .env
+   
+   # Using vim
+   vim .env
+   
+   # Using VS Code
+   code .env
+   
+   # Using any text editor
+   open .env
+   ```
+
+3. **Replace the placeholder** with your actual OpenAI API key:
+   ```bash
+   # Before (in .env.example):
+   OPENAI_API_KEY=your_openai_api_key_here
+   
+   # After (in your .env file):
+   OPENAI_API_KEY=sk-proj-abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx
+   ```
+
+4. **Save the file** and verify:
+   ```bash
+   # Check that your API key is set (should show your key)
+   cat .env
+   ```
+
+> 🔗 **Get your OpenAI API key here:** https://platform.openai.com/api-keys
+> 
+> 💰 **Note:** OpenAI API usage is pay-per-use. The system uses GPT-3.5-turbo which is very cost-effective.
 
 ## 🔍 Usage
 
