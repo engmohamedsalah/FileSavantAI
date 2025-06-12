@@ -7,21 +7,28 @@
 #include <string.h>
 #include <unistd.h>
 
+/**
+ * @brief Determines file type from mode
+ * @param mode File mode from stat structure
+ * @return String representation of file type
+ */
+const char* get_file_type(mode_t mode) {
+    if (S_ISDIR(mode)) return "directory";
+    if (S_ISREG(mode)) return "file";
+    if (S_ISLNK(mode)) return "symlink";
+    if (S_ISCHR(mode)) return "char_device";
+    if (S_ISBLK(mode)) return "block_device";
+    if (S_ISFIFO(mode)) return "fifo";
+    if (S_ISSOCK(mode)) return "socket";
+    return "unknown";
+}
+
 void print_file_info_json(const char *directory, const char *filename, struct stat *st) {
     // Get owner and group names
     struct passwd *pwd = getpwuid(st->st_uid);
     struct group *grp = getgrgid(st->st_gid);
     
-    // Determine file type
-    const char *file_type;
-    if (S_ISDIR(st->st_mode)) file_type = "directory";
-    else if (S_ISREG(st->st_mode)) file_type = "file";
-    else if (S_ISLNK(st->st_mode)) file_type = "symlink";
-    else if (S_ISCHR(st->st_mode)) file_type = "char_device";
-    else if (S_ISBLK(st->st_mode)) file_type = "block_device";
-    else if (S_ISFIFO(st->st_mode)) file_type = "fifo";
-    else if (S_ISSOCK(st->st_mode)) file_type = "socket";
-    else file_type = "unknown";
+    const char *file_type = get_file_type(st->st_mode);
     
     // Build full path
     char fullpath[2048];
