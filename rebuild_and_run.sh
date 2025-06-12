@@ -13,3 +13,5 @@ echo "🚀  Running new container..."
 # Pass all script arguments ($@) to the docker run command
 # Also mount the local sample_data directory to /data inside the container
 docker run --rm -v "$(pwd)/.env:/app/.env" -v "$(pwd)/sample_data:/data" filesavantai "$@" 
+
+#docker run --rm -v "$(pwd)/.env:/app/.env" filesavantai "$@" 
