@@ -64,11 +64,11 @@ def format_file_size(size):
         size /= 1024.0
     return f"{size:.1f} PB"
 
-def extract_query_parameters(query):
+def extract_query_parameters(query, suppress_warnings=False):
     """Use AI to extract structured parameters from natural language query"""
-    return extract_query_parameters_with_ai(query)
+    return extract_query_parameters_with_ai(query, suppress_warnings)
 
-def extract_query_parameters_with_ai(query):
+def extract_query_parameters_with_ai(query, suppress_warnings=False):
     """Use AI to extract structured parameters from natural language query"""
     
     # Set up OpenAI API key
@@ -132,7 +132,8 @@ def extract_query_parameters_with_ai(query):
             }
             
     except Exception as e:
-        print(f"⚠️ AI parameter extraction failed: {e}")
+        if not suppress_warnings:
+            print(f"⚠️ AI parameter extraction failed: {e}")
         return {
             "match_type": "contains",
             "case_sensitive": False,
@@ -141,7 +142,7 @@ def extract_query_parameters_with_ai(query):
 
 
 
-def answer_file_question_with_ai(files, query, filename=None):
+def answer_file_question_with_ai(files, query, filename=None, suppress_warnings=False):
     """Use OpenAI to intelligently answer questions about file attributes"""
     if not files:
         return "❌ No files found to analyze."
@@ -149,7 +150,7 @@ def answer_file_question_with_ai(files, query, filename=None):
     # If filename specified, extract parameters and filter files
     if filename:
         # Use AI to extract parameters from natural language
-        params = extract_query_parameters(query)
+        params = extract_query_parameters(query, suppress_warnings)
         match_type = params["match_type"]
         case_sensitive = params["case_sensitive"]
         
@@ -225,7 +226,8 @@ Please analyze this file information and answer the query clearly and accurately
         
     except Exception as e:
         # Fallback to simple analysis if AI fails
-        print(f"⚠️ AI analysis failed: {e}")
+        if not suppress_warnings:
+            print(f"⚠️ AI analysis failed: {e}")
         return fallback_file_analysis(files, query)
 
 def fallback_file_analysis(files, query):
