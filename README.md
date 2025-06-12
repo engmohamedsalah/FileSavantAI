@@ -5,7 +5,7 @@ An enhanced AI-powered file analysis tool that combines a C program for system-l
 ## 🚀 Features
 
 - **Enhanced C Program**: Outputs comprehensive file metadata in JSON format
-- **AI Question Answering**: Uses OpenAI GPT-3.5-turbo for intelligent file analysis
+- **AI Question Answering**: Uses configurable OpenAI models (GPT-3.5-turbo, GPT-4, etc.) for intelligent file analysis
 - **Advanced Search**: Multiple match types (exact, contains, similar) with case-sensitive options
 - **Cross-Validation**: Validates results using `ls -l` command
 - **Rich Metadata**: Includes owner, group, permissions, timestamps, inodes, and more
@@ -81,8 +81,26 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Model Configuration
+You can easily switch between different OpenAI models by editing your `.env` file:
+
+```bash
+# For better performance (more expensive)
+OPENAI_MODEL=gpt-4
+
+# For latest capabilities  
+OPENAI_MODEL=gpt-4-turbo
+
+# For optimized performance
+OPENAI_MODEL=gpt-4o
+
+# Back to default (cost-effective)
+OPENAI_MODEL=gpt-3.5-turbo
+```
+
 ### Troubleshooting
 - **Missing OpenAI API Key**: The system will fall back to keyword-based analysis
+- **Invalid Model Name**: Will use gpt-3.5-turbo as fallback
 - **Compilation Issues**: Make sure you have GCC installed (`gcc --version`)
 - **Permission Denied**: Make sure the compiled executable has execute permissions (`chmod +x file_info`)
 
@@ -141,14 +159,22 @@ The `.env` file is **required** for AI functionality. Here's exactly what to do:
    open .env
    ```
 
-3. **Replace the placeholder** with your actual OpenAI API key:
+3. **Replace the placeholders** with your actual values:
    ```bash
    # Before (in .env.example):
    OPENAI_API_KEY=your_openai_api_key_here
+   OPENAI_MODEL=gpt-3.5-turbo
    
    # After (in your .env file):
    OPENAI_API_KEY=sk-proj-abcd1234efgh5678ijkl9012mnop3456qrst7890uvwx
+   OPENAI_MODEL=gpt-3.5-turbo
    ```
+   
+   **Available Models:**
+   - `gpt-3.5-turbo` (default, fast and cost-effective)
+   - `gpt-4` (more capable but more expensive)
+   - `gpt-4-turbo` (latest GPT-4 with better performance)
+   - `gpt-4o` (optimized for speed and efficiency)
 
 4. **Save the file** and verify:
    ```bash
@@ -190,7 +216,7 @@ python3 ai_integration.py --filename hello --match-type similar
 ```
 
 ### 🤖 AI-Powered Analysis
-The system uses **OpenAI's GPT-3.5-turbo** to intelligently analyze file metadata and answer natural language questions. When AI is unavailable, it automatically falls back to keyword-based analysis:
+The system uses **configurable OpenAI models** (default: GPT-3.5-turbo) to intelligently analyze file metadata and answer natural language questions. When AI is unavailable, it automatically falls back to keyword-based analysis:
 
 ```bash
 # Ownership questions

@@ -133,8 +133,11 @@ File Data:
 Please analyze this file information and answer the question clearly and accurately."""
     
     try:
+        # Get model from environment or default to gpt-3.5-turbo
+        model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+        
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
