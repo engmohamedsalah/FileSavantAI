@@ -4,7 +4,7 @@ import io
 import sys
 import json
 from contextlib import redirect_stdout
-from ai_integration import parse_file_info, find_file, run_file_info, answer_file_question, format_file_size, format_timestamp, analyze_file_ownership
+from ai_integration import parse_file_info, find_file, run_file_info, answer_file_question_with_ai, format_file_size, format_timestamp, analyze_file_ownership
 
 class TestEnhancedFileAnalyzer(unittest.TestCase):
 
@@ -192,28 +192,34 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
         formatted = format_timestamp(timestamp)
         self.assertIn("2023", formatted)
 
-    def test_answer_file_question_who_owns(self):
-        """Test answering 'who owns' questions."""
-        answer = answer_file_question(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
+    @patch('ai_integration.openai.ChatCompletion.create')
+    @patch('ai_integration.os.getenv')
+    def test_answer_file_question_who_owns(self, mock_getenv, mock_openai):
+        """Test answering 'who owns' questions with AI."""
+        mock_getenv.return_value = "test_api_key"
+        mock_openai.return_value.choices = [MagicMock(message=MagicMock(content="hello_world.txt is owned by john (UID: 1000)"))]
+        
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
         self.assertIn("john", answer)
         self.assertIn("UID: 1000", answer)
 
-    def test_answer_file_question_permissions(self):
-        """Test answering permission questions."""
-        answer = answer_file_question(self.expected_parsed_data, "what are the permissions", "hello_world.txt")
-        self.assertIn("-rw-r--r--", answer)
-        self.assertIn("644", answer)
+    @patch('ai_integration.os.getenv')
+    def test_answer_file_question_no_api_key(self, mock_getenv):
+        """Test fallback when no API key is provided."""
+        mock_getenv.return_value = None
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
+        self.assertIn("OpenAI API key not found", answer)
 
-    def test_answer_file_question_size(self):
-        """Test answering size questions."""
-        answer = answer_file_question(self.expected_parsed_data, "what is the size", "hello_world.txt")
-        self.assertIn("28.0 B", answer)
-
-    def test_answer_file_question_group(self):
-        """Test answering group questions."""
-        answer = answer_file_question(self.expected_parsed_data, "what group", "hello_world.txt")
-        self.assertIn("users", answer)
-        self.assertIn("GID: 100", answer)
+    @patch('ai_integration.openai.ChatCompletion.create')
+    @patch('ai_integration.os.getenv')
+    def test_answer_file_question_ai_failure(self, mock_getenv, mock_openai):
+        """Test fallback when AI fails."""
+        mock_getenv.return_value = "test_api_key"
+        mock_openai.side_effect = Exception("API Error")
+        
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns hello_world.txt", "hello_world.txt")
+        self.assertIn("hello_world.txt", answer)
+        self.assertIn("john", answer)
 
     def test_analyze_file_ownership(self):
         """Test comprehensive file ownership analysis."""
@@ -246,13 +252,23 @@ class TestEnhancedFileAnalyzer(unittest.TestCase):
 
     def test_answer_no_files(self):
         """Test answering questions when no files are found."""
-        answer = answer_file_question([], "who owns test", "test")
+        answer = answer_file_question_with_ai([], "who owns test", "test")
         self.assertIn("No files found", answer)
 
     def test_answer_file_not_found(self):
         """Test answering questions when specific file is not found."""
-        answer = answer_file_question(self.expected_parsed_data, "who owns test", "nonexistent.txt")
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns test", "nonexistent.txt")
         self.assertIn("not found", answer)
+
+    def test_exact_match_functionality(self):
+        """Test that exact matching works correctly."""
+        # Should not find "hello_worl" when looking for exact match
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns", "hello_worl", "exact")
+        self.assertIn("not found", answer)
+        
+        # Should find exact match
+        answer = answer_file_question_with_ai(self.expected_parsed_data, "who owns", "hello_world.txt", "exact")
+        self.assertIn("john", answer)
 
 if __name__ == '__main__':
     unittest.main() 

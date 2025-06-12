@@ -3,6 +3,11 @@ import argparse
 import json
 import os
 from datetime import datetime
+import openai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def run_file_info(directory="."):
     """Run the enhanced file_info C program and capture its JSON output"""
@@ -73,42 +78,91 @@ def analyze_file_ownership(file_info):
     
     return "\n".join(analysis)
 
-def answer_file_question(files, question, filename=None):
-    """Answer questions about file attributes including ownership, permissions, size, timestamps, etc."""
+def answer_file_question_with_ai(files, question, filename=None, match_type="contains", case_sensitive=False):
+    """Use OpenAI to intelligently answer questions about file attributes"""
     if not files:
         return "❌ No files found to analyze."
     
     # If filename specified, filter to that file
     if filename:
-        if not (target_files := find_file(files, filename, "contains")):
+        if not (target_files := find_file(files, filename, match_type, case_sensitive)):
             return f"❌ File '{filename}' not found."
         files = target_files
     
-    responses = []
+    # Set up OpenAI API key
+    openai.api_key = os.getenv('OPENAI_API_KEY')
+    if not openai.api_key:
+        return "❌ OpenAI API key not found. Please set OPENAI_API_KEY in .env file"
     
+    # Prepare file data for AI analysis
+    file_data_summary = []
     for file_info in files:
-        if "who owns" in question.lower() or "owner" in question.lower():
-            responses.append(f"🔍 {file_info['name']} is owned by {file_info['owner']} (UID: {file_info['uid']})")
-        
-        elif "who created" in question.lower() or "creator" in question.lower():
-            responses.append(f"🔍 {file_info['name']} was created by {file_info['owner']} (files show owner, not creator)")
-        
-        elif "permission" in question.lower() or "access" in question.lower():
-            responses.append(f"🔍 {file_info['name']} permissions: {file_info['permissions_readable']} ({file_info['permissions']})")
-        
-        elif "size" in question.lower():
-            responses.append(f"🔍 {file_info['name']} size: {format_file_size(file_info['size'])}")
-        
-        elif "when" in question.lower() or "modified" in question.lower():
-            responses.append(f"🔍 {file_info['name']} last modified: {format_timestamp(file_info['modified'])}")
-        
-        elif "group" in question.lower():
-            responses.append(f"🔍 {file_info['name']} group: {file_info['group']} (GID: {file_info['gid']})")
-        
-        else:
-            # Provide comprehensive info for general questions
-            responses.append(analyze_file_ownership(file_info))
+        file_summary = {
+            "name": file_info["name"],
+            "size": format_file_size(file_info["size"]),
+            "owner": f"{file_info['owner']} (UID: {file_info['uid']})",
+            "group": f"{file_info['group']} (GID: {file_info['gid']})",
+            "permissions": f"{file_info['permissions_readable']} ({file_info['permissions']})",
+            "type": file_info["type"],
+            "modified": format_timestamp(file_info["modified"]),
+            "accessed": format_timestamp(file_info["accessed"]),
+            "changed": format_timestamp(file_info["changed"])
+        }
+        file_data_summary.append(file_summary)
     
+    # Create AI prompt
+    system_prompt = """You are a file system expert assistant. You analyze file metadata and answer questions about files.
+    
+    Available file information includes:
+    - File name, size, type
+    - Owner (username and UID)
+    - Group (group name and GID) 
+    - Permissions (readable format and octal)
+    - Timestamps (modified, accessed, changed)
+    
+    Provide clear, accurate answers based on the file data. Use emojis for better readability.
+    For ownership questions, provide both username and UID.
+    For permission questions, explain what the permissions mean.
+    Be helpful and informative."""
+    
+    user_prompt = f"""Question: {question}
+
+File Data:
+{json.dumps(file_data_summary, indent=2)}
+
+Please analyze this file information and answer the question clearly and accurately."""
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=500,
+            temperature=0.3
+        )
+        
+        ai_answer = response.choices[0].message.content.strip()
+        return f"🤖 AI Analysis:\n{ai_answer}"
+        
+    except Exception as e:
+        # Fallback to simple analysis if AI fails
+        print(f"⚠️ AI analysis failed: {e}")
+        return fallback_file_analysis(files, question)
+
+def fallback_file_analysis(files, question):
+    """Fallback analysis when AI is unavailable"""
+    responses = []
+    for file_info in files:
+        if "own" in question.lower():
+            responses.append(f"📁 {file_info['name']} is owned by {file_info['owner']} (UID: {file_info['uid']})")
+        elif "permission" in question.lower():
+            responses.append(f"🔐 {file_info['name']} permissions: {file_info['permissions_readable']} ({file_info['permissions']})")
+        elif "size" in question.lower():
+            responses.append(f"📏 {file_info['name']} size: {format_file_size(file_info['size'])}")
+        else:
+            responses.append(analyze_file_ownership(file_info))
     return "\n\n".join(responses)
 
 def validate_with_ls(file_path):
@@ -163,7 +217,7 @@ def main():
         else:
             print(f"\n🤖 AI Analysis for all files:")
         
-        answer = answer_file_question(files, args.question, args.filename)
+        answer = answer_file_question_with_ai(files, args.question, args.filename, args.match_type, args.case_sensitive)
         print(answer)
     
     # Validation with ls -l
