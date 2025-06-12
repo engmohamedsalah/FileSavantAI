@@ -357,6 +357,85 @@ Important Notes:
 
 ## 🏗️ Architecture
 
+### System Pipeline Overview
+
+The FileSavantAI system follows a sophisticated pipeline that integrates C-level file operations with AI-powered analysis:
+
+```mermaid
+graph TD
+    A[User Input] --> B{Command Type?}
+    
+    B -->|--list-all| C[List All Files Mode]
+    B -->|--filename specified| D[Specific File Analysis]
+    B -->|Directory Analysis| E[Directory-wide Analysis]
+    
+    C --> F[Run C Program]
+    D --> F
+    E --> F
+    
+    F --> G[./file_info directory_path]
+    G --> H{C Program Success?}
+    
+    H -->|Success| I[JSON Output<br/>Files Metadata]
+    H -->|Error| J[Error Response<br/>JSON Format]
+    
+    I --> K[Parse JSON in Python]
+    J --> K
+    
+    K --> L{Filename Filter?}
+    L -->|Yes| M[Filter Files by<br/>Match Type]
+    L -->|No| N[Use All Files]
+    
+    M --> O[Apply Search Strategy]
+    O --> P{Files Found?}
+    P -->|Yes| Q[Filtered File List]
+    P -->|No| R[File Not Found Error]
+    
+    N --> Q
+    R --> S[Return Error Message]
+    
+    Q --> T{AI Available?}
+    T -->|API Key Present| U[OpenAI API Call]
+    T -->|No API Key| V[Fallback Analysis]
+    
+    U --> W[GPT Model Analysis<br/>configurable model]
+    W --> X{API Success?}
+    X -->|Success| Y[AI Generated Response]
+    X -->|Error| V
+    
+    V --> Z[Keyword-based Analysis<br/>Pattern Matching]
+    Z --> AA[Fallback Response]
+    
+    Y --> BB[Format Response]
+    AA --> BB
+    
+    BB --> CC{Validation Requested?}
+    CC -->|--validate flag| DD[Run ls -l Command]
+    CC -->|No validation| EE[Final Output]
+    
+    DD --> FF[Cross-validate Results]
+    FF --> EE
+    
+    EE --> GG[Display to User]
+    
+    style A fill:#e1f5fe
+    style G fill:#f3e5f5
+    style I fill:#e8f5e8
+    style U fill:#fff3e0
+    style W fill:#fff3e0
+    style V fill:#ffebee
+    style GG fill:#e8f5e8
+```
+
+### Pipeline Stages Explained
+
+1. **🔤 Input Processing**: Command-line arguments are parsed and validated
+2. **⚙️ C Program Execution**: System-level file operations generate JSON metadata
+3. **📊 Data Processing**: Python parses JSON and applies filtering logic
+4. **🤖 AI Analysis**: OpenAI models or fallback analysis process the data
+5. **✅ Validation**: Optional cross-validation with system commands
+6. **📋 Output**: Formatted results presented to user
+
 ### Two-Part Design (Task 2 Compliance)
 
 1. **C Program (`file_info.c`)**:
@@ -425,9 +504,18 @@ printf("\n]\n");
 
 ### Data Flow
 
+The system implements a robust pipeline with multiple decision points and fallback mechanisms:
+
 ```
-User Question → Python AI Script → C Program → JSON Output → AI Analysis → Validation (ls -l) → Answer
+User Input → Command Parsing → C Program Execution → JSON Processing → File Filtering → AI Analysis → Validation → Output
 ```
+
+**Key Pipeline Features:**
+- **🔄 Error Recovery**: Automatic fallback when AI is unavailable
+- **🎯 Smart Filtering**: Multiple search strategies (exact, contains, similar)
+- **✅ Validation**: Cross-checking with system commands
+- **🧠 AI Flexibility**: Configurable model selection
+- **📊 Rich Metadata**: Comprehensive file information extraction
 
 ## 📋 Examples
 
